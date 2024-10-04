@@ -1,0 +1,248 @@
+0001   0000             ; Programa que genera 20 números aleatorios y ordena de forma ascendente o descendente
+0002   0000             ; Realizado por Roberto Yael San Pedro Rivera
+0003   0000             
+0004   0000             ;------------------
+0005   0000             ; Programa principal
+0006   0000             ;------------------
+0007   0000             
+0008   0000                 .org 0000h
+0009   0000 31 FF 27        ld sp,27ffh
+0010   0003             inicio:
+0011   0003 3E 89           ld a,89h
+0012   0005 D3 03           out (cw),a
+0013   0007 21 00 20        ld hl,txtin
+0014   000A CD 42 00        call mstrtxt
+0015   000D 06 14           ld b,20
+0016   000F 21 FF 27        ld hl,27ffh
+0017   0012 CD 4F 00        call num_rnd
+0018   0015 21 FF 27        ld hl,27ffh
+0019   0018 06 14           ld b,20
+0020   001A CD 78 00        call mostrar_num
+0021   001D 21 0F 20        ld hl,ord_txt1
+0022   0020 CD 42 00        call mstrtxt
+0023   0023 21 17 20        ld hl,ord_txt2
+0024   0026 CD 42 00        call mstrtxt
+0025   0029 21 24 20        ld hl,ord_txt3
+0026   002C CD 42 00        call mstrtxt
+0027   002F DB 02           in a,(teclado)
+0028   0031 FE 41           cp 'A'
+0029   0033 CA A8 00        jp z,orden_ascen
+0030   0036 FE 44           cp 'D'
+0031   0038 CA B4 00        jp z,orden_descen
+0032   003B CD C0 00        call mostrar_num_ord
+0033   003E CD CD 00        call pregunta
+0034   0041 76              halt
+0035   0042             
+0036   0042             ;---------
+0037   0042             ; Subrutinas
+0038   0042             ;---------
+0039   0042             
+0040   0042             mstrtxt:
+0041   0042 7E              ld a,(hl)
+0042   0043 FE 24           cp '$'
+0043   0045 CA 4E 00        jp z,fin_mstxt
+0044   0048 D3 01           out (lcd),a
+0045   004A 23              inc hl
+0046   004B C3 42 00        jp mstrtxt
+0047   004E             fin_mstxt:
+0048   004E C9              ret
+0049   004F             
+0050   004F             num_rnd:
+0051   004F ED 5F           ld a, r
+0052   0051 4F              ld c, a
+0053   0052 87              add a, a
+0054   0053 81              add a, c
+0055   0054 87              add a, a
+0056   0055 87              add a, a
+0057   0056 81              add a, c
+0058   0057 C6 52           add a, 82
+0059   0059 CB 3F           srl a
+0060   005B CB 3F           srl a
+0061   005D CB 3F           srl a
+0062   005F CB 3F           srl a
+0063   0061 C6 30           add a, 30h      ; Suma 30h para convertir a ASCII
+0064   0063 FE 3A           cp 3Ah          ; Si supera 39h, ajustar
+0065   0065 D2 6F 00        jp nc, ajustar
+0066   0068 23              inc hl
+0067   0069 77              ld (hl), a
+0068   006A 05              dec b
+0069   006B C2 4F 00        jp nz, num_rnd
+0070   006E C9              ret
+0071   006F             
+0072   006F             ajustar:
+0073   006F D6 06           sub 6h    ; Resta para ajustar al rango (30h-39h)
+0074   0071 23              inc hl
+0075   0072 77              ld (hl),a
+0076   0073 05              dec b
+0077   0074 C2 4F 00        jp nz, num_rnd
+0078   0077 C9              ret
+0079   0078             
+0080   0078             mostrar_num:
+0081   0078 7E              ld a,(hl)
+0082   0079 CD 80 00        call conv_decimal
+0083   007C 23              inc hl
+0084   007D 10 F9           djnz mostrar_num
+0085   007F C9              ret
+0086   0080             
+0087   0080             conv_decimal:
+0088   0080 06 0A           ld b,10
+0089   0082 16 00           ld d,0
+0090   0084             decenas:
+0091   0084 B8              cp b
+0092   0085 C3 92 00        jp mostrar_unidades
+0093   0088 90              sub b
+0094   0089 14              inc d
+0095   008A C3 84 00        jp decenas
+0096   008D             
+0097   008D             mostrar_decenas:
+0098   008D 7A              ld a,d
+0099   008E C6 30           add a,'0'
+0100   0090 D3 01           out (lcd),a
+0101   0092             
+0102   0092             mostrar_unidades:
+0103   0092 7E              ld a,(hl)
+0104   0093 E6 0F           and 0fh
+0105   0095 06 0A           ld b,10
+0106   0097 16 00           ld d,0
+0107   0099             unidades:
+0108   0099 B8              cp b
+0109   009A C3 A2 00        jp fin_conv
+0110   009D 90              sub b
+0111   009E 14              inc d
+0112   009F C3 99 00        jp unidades
+0113   00A2             fin_conv:
+0114   00A2 7A              ld a,d
+0115   00A3 C6 30           add a,'0'
+0116   00A5 D3 01           out (lcd),a
+0117   00A7 C9              ret
+0118   00A8             
+0119   00A8             orden_ascen:
+0120   00A8 21 FF 27        ld hl,27ffh
+0121   00AB 06 14           ld b,20
+0122   00AD CD EC 00        call ordenar
+0123   00B0 CD 0E 01        call mostrar_as
+0124   00B3 C9              ret
+0125   00B4             
+0126   00B4             orden_descen:
+0127   00B4 21 FF 27        ld hl,27ffh
+0128   00B7 06 14           ld b,20
+0129   00B9 CD EC 00        call ordenar
+0130   00BC CD 1A 01        call mostrar_des
+0131   00BF C9              ret
+0132   00C0             
+0133   00C0             mostrar_num_ord:
+0134   00C0 21 FF 27        ld hl,27ffh
+0135   00C3 06 14           ld b,20
+0136   00C5             loop_mstr_ord:
+0137   00C5 7E              ld a,(hl)
+0138   00C6 CD 80 00        call conv_decimal
+0139   00C9 23              inc hl
+0140   00CA 10 F9           djnz loop_mstr_ord
+0141   00CC C9              ret
+0142   00CD             
+0143   00CD             pregunta:
+0144   00CD 21 32 20        ld hl,preg_txt1
+0145   00D0 CD 42 00        call mstrtxt
+0146   00D3 21 3F 20        ld hl,preg_txt2
+0147   00D6 CD 42 00        call mstrtxt
+0148   00D9 DB 02           in a,(teclado)
+0149   00DB FE 52           cp 'R'
+0150   00DD CA 03 00        jp z,inicio
+0151   00E0 FE 53           cp 'S'
+0152   00E2 CA E5 00        jp z,fin_programa
+0153   00E5             
+0154   00E5             fin_programa:
+0155   00E5 21 4A 20        ld hl,txt_salida
+0156   00E8 CD 42 00        call mstrtxt
+0157   00EB 76              halt
+0158   00EC             
+0159   00EC             ordenar:
+0160   00EC 21 FF 27        ld hl,27ffh
+0161   00EF 1E 14           ld e,20
+0162   00F1             ascendente_loop:
+0163   00F1 7E              ld a,(hl)
+0164   00F2 23              inc hl
+0165   00F3 46              ld b,(hl)
+0166   00F4 1D              dec e
+0167   00F5 CA 06 01        jp z,reinicio
+0168   00F8 B8              cp b
+0169   00F9 D2 FF 00        jp nc,intercambio
+0170   00FC C3 F1 00        jp ascendente_loop
+0171   00FF             
+0172   00FF             intercambio:
+0173   00FF 77              ld (hl),a
+0174   0100 2B              dec hl
+0175   0101 70              ld (hl),b
+0176   0102 23              inc hl
+0177   0103 C3 F1 00        jp ascendente_loop
+0178   0106             
+0179   0106             reinicio:
+0180   0106 15              dec d
+0181   0107 CA 0D 01        jp z, end3
+0182   010A C3 EC 00        jp ordenar
+0183   010D             
+0184   010D             end3:
+0185   010D C9              ret
+0186   010E             
+0187   010E             mostrar_as:
+0188   010E 21 FF 27        ld hl,27ffh
+0189   0111 06 14           ld b,20
+0190   0113             loop_as:
+0191   0113 7E              ld a,(hl)
+0192   0114 D3 01           out (lcd),a
+0193   0116 23              inc hl
+0194   0117 10 FA           djnz loop_as
+0195   0119 C9              ret
+0196   011A             
+0197   011A             mostrar_des:
+0198   011A 21 FF 27        ld hl,27ffh
+0199   011D 06 14           ld b,20
+0200   011F 1E 13           ld e,19
+0201   0121             final_des:
+0202   0121 23              inc hl
+0203   0122 1D              dec e
+0204   0123 C2 21 01        jp nz,final_des
+0205   0126             loop_des:
+0206   0126 7E              ld a,(hl)
+0207   0127 D3 01           out (lcd),a
+0208   0129 2B              dec hl
+0209   012A 10 FA           djnz loop_des
+0210   012C C9              ret
+0211   012D             
+0212   012D             ;-------
+0213   012D             ; Datos
+0214   012D             ;-------
+0215   012D             
+0216   012D                 .org 2000h
+0217   2000 47 45 4E 45 txtin .db "GENERANDO NUM:$"
+0217   2004 52 41 4E 44 
+0217   2008 4F 20 4E 55 
+0217   200C 4D 3A 24    
+0218   200F 4F 52 44 45 ord_txt1 .db "ORDENAR$"
+0218   2013 4E 41 52 24 
+0219   2017 41 53 43 45 ord_txt2 .db "ASCENDENTE O$"
+0219   201B 4E 44 45 4E 
+0219   201F 54 45 20 4F 
+0219   2023 24          
+0220   2024 20 44 45 53 ord_txt3 .db " DESCENDENTE?$"
+0220   2028 43 45 4E 44 
+0220   202C 45 4E 54 45 
+0220   2030 3F 24       
+0221   2032 52 45 50 45 preg_txt1 .db "REPETIR(R) O$"
+0221   2036 54 49 52 28 
+0221   203A 52 29 20 4F 
+0221   203E 24          
+0222   203F 20 53 41 4C preg_txt2 .db " SALIR(S)?$"
+0222   2043 49 52 28 53 
+0222   2047 29 3F 24    
+0223   204A 46 49 4E 20 txt_salida .db "FIN PROGRAMA$"
+0223   204E 50 52 4F 47 
+0223   2052 52 41 4D 41 
+0223   2056 24          
+0224   2057             lcd    .equ 01h
+0225   2057             teclado .equ 02h
+0226   2057             cw     .equ 03h
+0227   2057             
+0228   2057                 .end
+0229   2057             
+Number of errors = 0
